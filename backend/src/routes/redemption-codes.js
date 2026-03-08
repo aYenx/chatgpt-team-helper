@@ -51,6 +51,8 @@ const parseBoolean = (value, fallback) => {
   return fallback
 }
 const HISTORY_CODE_MIN_ACCOUNT_REMAINING_DAYS = 30
+const rawXianyuThreshold = parseAmountNumber(process.env.XIANYU_ORDER_AMOUNT_THRESHOLD)
+const XIANYU_ORDER_AMOUNT_THRESHOLD = rawXianyuThreshold == null ? 10 : Math.max(0, rawXianyuThreshold)
 const ACCOUNT_RECOVERY_WINDOW_DAYS = Math.max(1, toInt(process.env.ACCOUNT_RECOVERY_WINDOW_DAYS, 30))
 const ACCOUNT_RECOVERY_REDEEM_MAX_ATTEMPTS = Math.min(
   10,
@@ -183,8 +185,8 @@ const resolveXianyuOrderTypeFromActualPaid = (actualPaid) => {
   const tierDistance = (value) => Math.min(Math.abs(value - 5), Math.abs(value - 15))
   const normalized = tierDistance(asCentToYuan) < tierDistance(asYuan) ? asCentToYuan : asYuan
 
-  // 约定：< 10 元按“无质保（5元档）”，>= 10 元按“质保（15元档）”
-  return normalized < 10 ? ORDER_TYPE_NO_WARRANTY : ORDER_TYPE_WARRANTY
+  // 可配置：低于阈值按“无质保”，大于等于阈值按“质保”
+  return normalized < XIANYU_ORDER_AMOUNT_THRESHOLD ? ORDER_TYPE_NO_WARRANTY : ORDER_TYPE_WARRANTY
 }
 
 const resolveChannelNameFromRegistry = (channelsByKey, channelKey) => {
